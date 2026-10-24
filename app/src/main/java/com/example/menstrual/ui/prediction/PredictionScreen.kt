@@ -23,7 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.example.menstrual.domain.model.Confidence
 import com.example.menstrual.domain.model.Prediction
 import com.example.menstrual.ui.AppViewModel
@@ -36,7 +36,7 @@ private val FMT = DateTimeFormatter.ofPattern("yyyy/M/d")
 
 @Composable
 fun PredictionScreen(vm: AppViewModel) {
-    val result by vm.predictionsFlow.collectAsStateWithLifecycle()
+    val result by vm.predictionsFlow.collectAsState()
     val today = LocalDate.now()
     val upcoming = result.predictions.filter { !it.predictedEnd.isBefore(today) }
 

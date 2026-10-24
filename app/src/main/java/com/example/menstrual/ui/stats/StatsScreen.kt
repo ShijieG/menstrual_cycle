@@ -25,7 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.example.menstrual.ui.AppViewModel
 import com.example.menstrual.ui.theme.Rose400
 import com.example.menstrual.ui.theme.Rose100
@@ -33,7 +33,7 @@ import kotlin.math.sqrt
 
 @Composable
 fun StatsScreen(vm: AppViewModel) {
-    val episodes by vm.episodes.collectAsStateWithLifecycle()
+    val episodes by vm.episodes.collectAsState()
     val sorted = episodes.sortedBy { it.startDate }
     val starts = sorted.map { it.startDate }
     val intervals = starts.zipWithNext { a, b -> (b.toEpochDay() - a.toEpochDay()).toInt() }

@@ -35,7 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.example.menstrual.data.local.entity.SymptomEntryEntity
 import com.example.menstrual.ui.AppViewModel
 import com.example.menstrual.ui.theme.Rose400
@@ -52,8 +52,8 @@ private val DISCHARGES = listOf("干燥", "正常", "增多", "拉丝")
 @Composable
 fun LogScreen(vm: AppViewModel) {
     var date by remember { mutableStateOf(LocalDate.now()) }
-    val ongoing by vm.ongoing.collectAsStateWithLifecycle()
-    val symptoms by vm.symptomsForDate(date).collectAsStateWithLifecycle(initialValue = emptyList())
+    val ongoing by vm.ongoing.collectAsState()
+    val symptoms by vm.symptomsForDate(date).collectAsState(initial = emptyList())
 
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),

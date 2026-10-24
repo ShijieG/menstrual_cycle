@@ -34,7 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.example.menstrual.data.local.entity.PeriodEpisodeEntity
 import com.example.menstrual.domain.model.PredictionResult
 import com.example.menstrual.domain.usecase.PredictCyclesUseCase
@@ -52,8 +52,8 @@ private val predictor = PredictCyclesUseCase()
 
 @Composable
 fun CalendarScreen(vm: AppViewModel) {
-    val episodes by vm.episodes.collectAsStateWithLifecycle()
-    val predictions by vm.predictionsFlow.collectAsStateWithLifecycle()
+    val episodes by vm.episodes.collectAsState()
+    val predictions by vm.predictionsFlow.collectAsState()
     var monthOffset by remember { mutableStateOf(0) }
     val today = LocalDate.now()
     val base = today.withDayOfMonth(1).plusMonths(monthOffset.toLong())

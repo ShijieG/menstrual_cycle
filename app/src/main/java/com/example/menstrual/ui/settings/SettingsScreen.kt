@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.collectAsState
 import com.example.menstrual.MenstrualApplication
 import com.example.menstrual.reminder.ReminderScheduler
 import com.example.menstrual.ui.AppViewModel
@@ -43,11 +43,11 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(vm: AppViewModel) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val defaultCycle by vm.defaultCycleLength.collectAsStateWithLifecycle()
-    val defaultPeriod by vm.defaultPeriodLength.collectAsStateWithLifecycle()
-    val periodReminderOn by vm.periodReminderOn.collectAsStateWithLifecycle()
-    val periodRemindDaysBefore by vm.periodRemindDaysBefore.collectAsStateWithLifecycle()
-    val ovulationReminderOn by vm.ovulationReminderOn.collectAsStateWithLifecycle()
+    val defaultCycle by vm.defaultCycleLength.collectAsState()
+    val defaultPeriod by vm.defaultPeriodLength.collectAsState()
+    val periodReminderOn by vm.periodReminderOn.collectAsState()
+    val periodRemindDaysBefore by vm.periodRemindDaysBefore.collectAsState()
+    val ovulationReminderOn by vm.ovulationReminderOn.collectAsState()
 
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
