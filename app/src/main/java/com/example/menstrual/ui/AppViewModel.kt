@@ -37,7 +37,7 @@ class AppViewModel(
     val periodRemindDaysBefore = settings.periodRemindDaysBefore.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
     val ovulationReminderOn = settings.ovulationReminderOn.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val predictions: PredictionResult = predictUseCase(emptyList(), 28, 5)
+    val predictions: PredictionResult = predictUseCase(emptyList<Cycle>(), 28, 5)
 
     val predictionsFlow = combine(episodes, defaultCycleLength, defaultPeriodLength) { eps, dc, dp ->
         predictUseCase(

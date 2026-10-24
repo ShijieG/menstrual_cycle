@@ -11,6 +11,7 @@ import com.example.menstrual.MenstrualApplication
 import com.example.menstrual.domain.model.Cycle
 import com.example.menstrual.domain.usecase.PredictCyclesUseCase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
