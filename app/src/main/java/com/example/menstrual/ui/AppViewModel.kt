@@ -10,9 +10,10 @@ import com.example.menstrual.data.local.entity.PeriodEpisodeEntity
 import com.example.menstrual.data.local.entity.SymptomEntryEntity
 import com.example.menstrual.data.preferences.SettingsDataStore
 import com.example.menstrual.data.repository.PeriodRepository
+import com.example.menstrual.MenstrualApplication
 import com.example.menstrual.domain.model.Cycle
+import com.example.menstrual.domain.model.PredictionResult
 import com.example.menstrual.domain.usecase.PredictCyclesUseCase
-import com.example.menstrual.domain.usecase.PredictionResult
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

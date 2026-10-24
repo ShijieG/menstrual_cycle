@@ -23,6 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.menstrual.MenstrualApplication
+import com.example.menstrual.ui.calendar.CalendarScreen
+import com.example.menstrual.ui.log.LogScreen
+import com.example.menstrual.ui.prediction.PredictionScreen
+import com.example.menstrual.ui.settings.SettingsScreen
+import com.example.menstrual.ui.stats.StatsScreen
 import java.time.LocalDate
 
 enum class Screen(val label: String, val icon: ImageVector) {
