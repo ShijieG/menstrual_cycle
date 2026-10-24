@@ -16,10 +16,12 @@ import kotlin.math.roundToLong
  * 并给出概率（置信等级 + 80% 置信区间）以及排卵期 / 易孕日。
  *
  * 算法：
- *  1. 由相邻开始日求周期长度序列，统计均值 μ_c 与标准差 σ_c；
- *  2. 由已结束经期求经期长度序列，统计 μ_p 与 σ_p；
- *  3. 历史不足（<2 个完整区间）时回落医学默认 28 天 / 5 天，并标记为低置信；
- *  4. 从最后一次记录起，按 μ_c 递推未来各周期起点，套高斯分布给出概率窗口。
+ *  1. 统计窗口限定为【过去 windowMonths(默认 36) 个月】内的记录（仅 today 及之前）；
+ *  2. 由窗口内相邻开始日求周期长度序列，统计均值 μ_c 与标准差 σ_c；
+ *  3. 由窗口内已结束经期求经期长度序列，统计 μ_p 与 σ_p；
+ *  4. 窗口内数据不足（<2 个完整区间）时回落医学默认 28 天 / 5 天，并标记为低置信；
+ *  5. 预测窗口为【未来 horizonMonths(默认 36) 个月】：从最后一次记录的下一次月经起，
+ *     按 μ_c 递推各周期起点（仅生成 today 之后的预测），套高斯分布给出概率窗口。
  */
 class PredictCyclesUseCase {
 
@@ -28,13 +30,18 @@ class PredictCyclesUseCase {
         defaultCycle: Int,
         defaultPeriod: Int,
         horizonMonths: Int = 36,
+        windowMonths: Int = 36,
         today: LocalDate = LocalDate.now()
     ): PredictionResult {
-        val sorted = episodes.sortedBy { it.startDate }
-        val starts = sorted.map { it.startDate }
+        // 仅纳入“今天及之前”的记录，并限定到【过去 windowMonths 个月】作为统计窗口
+        val sorted = episodes.filter { !it.startDate.isAfter(today) }.sortedBy { it.startDate }
+        val windowStart = today.minusMonths(windowMonths.toLong())
+        val inWindow = sorted.filter { !it.startDate.isBefore(windowStart) }
 
+        // 统计仅基于过去 windowMonths 个月内的记录
+        val starts = inWindow.map { it.startDate }
         val intervals = starts.zipWithNext { a, b -> (b.toEpochDay() - a.toEpochDay()).toDouble() }
-        val completed = sorted.filter { it.endDate != null }
+        val completed = inWindow.filter { it.endDate != null }
         val lengths = completed.mapNotNull { it.length?.toDouble() }
 
         val (muC, sigC, isDefault) = if (intervals.size >= 2) {
@@ -57,7 +64,9 @@ class PredictCyclesUseCase {
 
         val predictions = mutableListOf<Prediction>()
         var k = 1
+        // 从最后一次记录的下一次月经起推算，并保证只预测“今天之后”的月经（跳过已过去的推算点）
         var cursor = lastStart.plusDays(round(muC).roundToLong())
+        while (cursor < today) cursor = cursor.plusDays(round(muC).roundToLong())
         while (cursor <= horizonEnd) {
             val start = cursor
             val end = start.plusDays(maxOf(1L, round(muP).roundToLong()) - 1)
