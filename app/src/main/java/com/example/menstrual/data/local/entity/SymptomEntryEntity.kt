@@ -5,9 +5,9 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 
 /**
- * 某天的症状 / 心情 / 分泌物记录。
- * @param type 0=症状 1=心情 2=分泌物
- * @param value 名称（如「腹痛」「焦虑」「干燥」）
+ * 某天的症状 / 性生活记录。
+ * @param type 0=症状 3=性生活（心情/分泌物已移除）
+ * @param value 名称（如「腹痛」「有」）
  * @param intensity 0~3 程度
  */
 @Entity(tableName = "symptom_entries")

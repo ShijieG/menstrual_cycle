@@ -52,10 +52,17 @@ class AppViewModel(
         list.filter { it.endDate == null }.maxByOrNull { it.startDate }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    // ---- 经期记录 ----
-    fun startPeriod(flowLevel: Int = 2) = viewModelScope.launch { repository.startPeriod(flowLevel = flowLevel) }
-    fun endPeriod() = viewModelScope.launch { repository.endPeriod() }
+    // ---- 经期记录（按具体日期标记，供日历点击使用） ----
+    fun startPeriodOn(date: LocalDate) = viewModelScope.launch { repository.startPeriod(startDate = date) }
+    fun endPeriodOn(date: LocalDate) = viewModelScope.launch { repository.endPeriod(date = date) }
     fun deleteEpisode(episode: PeriodEpisodeEntity) = viewModelScope.launch { repository.deleteEpisode(episode) }
+
+    // ---- 性生活记录（type = SEX_TYPE，按天 toggle） ----
+    fun toggleSex(date: LocalDate) = viewModelScope.launch {
+        val existing = repository.getAllSymptoms().firstOrNull { it.date == date && it.type == SEX_TYPE }
+        if (existing != null) repository.removeSymptom(existing)
+        else repository.addSymptom(SymptomEntryEntity(date = date, type = SEX_TYPE, value = SEX_VALUE, intensity = 0))
+    }
 
     // ---- 症状 ----
     fun symptomsForDate(date: LocalDate) = repository.symptomsForDate(date)
@@ -73,6 +80,13 @@ class AppViewModel(
     fun setOvulationReminderOn(v: Boolean) = viewModelScope.launch { settings.setOvulationReminderOn(v) }
 
     suspend fun export(): File = exportManager.export(repository.getAllEpisodes(), repository.getAllSymptoms())
+
+    companion object {
+        /** 症状类型（保留）；性生活使用 SEX_TYPE，心情/分泌物已移除。 */
+        const val SYMPTOM_TYPE = 0
+        const val SEX_TYPE = 3
+        const val SEX_VALUE = "有"
+    }
 }
 
 class AppViewModelFactory(private val app: Application) : ViewModelProvider.Factory {

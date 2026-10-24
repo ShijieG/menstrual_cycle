@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -17,19 +18,27 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.compose.runtime.collectAsState
@@ -92,24 +101,22 @@ fun SettingsScreen(vm: AppViewModel) {
         Text("设置", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
         Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("默认周期长度：${defaultCycle} 天", style = MaterialTheme.typography.titleMedium)
-                Slider(value = defaultCycle.toFloat(), onValueChange = { vm.setDefaultCycleLength(it.toInt()) }, valueRange = 20f..45f, steps = 24)
-                Text("默认经期长度：${defaultPeriod} 天", style = MaterialTheme.typography.titleMedium)
-                Slider(value = defaultPeriod.toFloat(), onValueChange = { vm.setDefaultPeriodLength(it.toInt()) }, valueRange = 2f..15f, steps = 12)
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("默认周期参数", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                NumberRow("默认周期长度", defaultCycle, 20, 45, "天") { vm.setDefaultCycleLength(it) }
+                NumberRow("默认经期长度", defaultPeriod, 2, 15, "天") { vm.setDefaultPeriodLength(it) }
                 Text("历史数据不足时使用以上默认值进行预测。", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
         Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text("经期来临提醒", style = MaterialTheme.typography.titleMedium)
                     Switch(checked = periodReminderOn, onCheckedChange = { toggleReminder(it) })
                 }
                 if (periodReminderOn) {
-                    Text("提前 ${periodRemindDaysBefore} 天提醒", style = MaterialTheme.typography.labelMedium)
-                    Slider(value = periodRemindDaysBefore.toFloat(), onValueChange = { vm.setPeriodRemindDaysBefore(it.toInt()) }, valueRange = 0f..7f, steps = 7)
+                    NumberRow("提前提醒天数", periodRemindDaysBefore, 0, 7, "天") { vm.setPeriodRemindDaysBefore(it) }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text("排卵期提醒", style = MaterialTheme.typography.titleMedium)
@@ -143,4 +150,38 @@ fun SettingsScreen(vm: AppViewModel) {
             }
         }
     }
+}
+
+/** 数字输入 + 滑块组合：可直接键入数值，也可用滑块微调，二者实时同步。 */
+@Composable
+fun NumberRow(label: String, value: Int, min: Int, max: Int, unit: String, onSet: (Int) -> Unit) {
+    var text by remember(value) { mutableStateOf(value.toString()) }
+    LaunchedEffect(value) {
+        val parsed = text.toIntOrNull()
+        if (parsed != null && parsed != value) text = value.toString()
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+        Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        OutlinedTextField(
+            value = text,
+            onValueChange = { s ->
+                val filtered = s.filter { it.isDigit() }
+                text = filtered
+                val v = filtered.toIntOrNull()
+                if (v != null) onSet(v.coerceIn(min, max))
+            },
+            modifier = Modifier.width(88.dp),
+            singleLine = true,
+            textStyle = TextStyle(textAlign = TextAlign.Center),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = { Text(unit) }
+        )
+    }
+    Slider(
+        value = value.toFloat(),
+        onValueChange = { onSet(it.toInt()) },
+        valueRange = min.toFloat()..max.toFloat(),
+        steps = (max - min - 1).coerceAtLeast(0)
+    )
 }
