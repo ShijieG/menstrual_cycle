@@ -28,10 +28,14 @@ class MenstrualApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // 若提醒开关开启，则在应用启动时重新登记周期提醒
+        // 若提醒开关开启，则在应用启动时重新登记周期提醒（兜底：任何异常都不应阻断启动）
         CoroutineScope(Dispatchers.IO).launch {
-            if (settings.periodReminderOn.first() || settings.ovulationReminderOn.first()) {
-                ReminderScheduler.schedule(this@MenstrualApplication)
+            try {
+                if (settings.periodReminderOn.first() || settings.ovulationReminderOn.first()) {
+                    ReminderScheduler.schedule(this@MenstrualApplication)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

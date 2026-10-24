@@ -1,0 +1,24 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 顶部装订环 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,29 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M68,29 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
+
+    <!-- 日历主体（白色圆角矩形） -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,37 h52 a8,8 0 0,1 8,8 v36 a8,8 0 0,1 -8,8 h-52 a8,8 0 0,1 -8,-8 v-36 a8,8 0 0,1 8,-8 Z" />
+
+    <!-- 日期格（粉色小方块，表示日期） -->
+    <path
+        android:fillColor="#D4537E"
+        android:pathData="M40,57 h7 v7 h-7 Z M50.5,57 h7 v7 h-7 Z M61,57 h7 v7 h-7 Z M40,68 h7 v7 h-7 Z M50.5,68 h7 v7 h-7 Z M61,68 h7 v7 h-7 Z M40,79 h7 v7 h-7 Z M50.5,79 h7 v7 h-7 Z M61,79 h7 v7 h-7 Z" />
+</vector>
