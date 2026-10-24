@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -161,7 +160,7 @@ fun NumberRow(label: String, value: Int, min: Int, max: Int, unit: String, onSet
     }
 
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+        Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth(1f))
         OutlinedTextField(
             value = text,
             onValueChange = { s ->

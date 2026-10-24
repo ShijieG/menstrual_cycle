@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -143,10 +142,10 @@ fun CycleTimeline(p: Prediction, avgCycle: Double) {
         modifier = Modifier.fillMaxWidth().height(26.dp).clip(RoundedCornerShape(6.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Segment(modifier = Modifier.weight(periodLen.toFloat().coerceAtLeast(0.02f)), color = Rose400, label = "经期", showLabel = periodLen.toFloat() / total >= 0.14f)
-        Segment(modifier = Modifier.weight(follicular.toFloat().coerceAtLeast(0.02f)), color = Rose100, label = "", showLabel = false)
-        Segment(modifier = Modifier.weight(ovul.toFloat().coerceAtLeast(0.02f)), color = Teal400, label = "排卵", showLabel = ovul.toFloat() / total >= 0.12f)
-        Segment(modifier = Modifier.weight(luteal.toFloat().coerceAtLeast(0.02f)), color = MaterialTheme.colorScheme.surfaceVariant, label = "", showLabel = false)
+        Segment(modifier = Modifier.fillMaxWidth((periodLen.toFloat() / total).coerceAtLeast(0.01f)), color = Rose400, label = "经期", showLabel = periodLen.toFloat() / total >= 0.14f)
+        Segment(modifier = Modifier.fillMaxWidth((follicular.toFloat() / total).coerceAtLeast(0.01f)), color = Rose100, label = "", showLabel = false)
+        Segment(modifier = Modifier.fillMaxWidth((ovul.toFloat() / total).coerceAtLeast(0.01f)), color = Teal400, label = "排卵", showLabel = ovul.toFloat() / total >= 0.12f)
+        Segment(modifier = Modifier.fillMaxWidth((luteal.toFloat() / total).coerceAtLeast(0.01f)), color = MaterialTheme.colorScheme.surfaceVariant, label = "", showLabel = false)
     }
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         LegendDot(Rose400, "经期")
@@ -188,9 +187,9 @@ fun WindowBar(p: Prediction) {
         modifier = Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(7.dp)).background(Rose100)
     ) {
         Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-            Spacer(modifier = Modifier.weight(peak))
+            Spacer(modifier = Modifier.fillMaxWidth(peak.coerceAtLeast(0.001f)))
             Box(modifier = Modifier.width(3.dp).fillMaxSize().background(Rose600))
-            Spacer(modifier = Modifier.weight((1f - peak).coerceAtLeast(0.001f)))
+            Spacer(modifier = Modifier.fillMaxWidth((1f - peak).coerceAtLeast(0.001f)))
         }
     }
 }

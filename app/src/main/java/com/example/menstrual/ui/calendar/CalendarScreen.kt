@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -97,7 +96,7 @@ fun CalendarScreen(vm: AppViewModel) {
 
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             listOf("一", "二", "三", "四", "五", "六", "日").forEach { w ->
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxWidth(1f), contentAlignment = Alignment.Center) {
                     Text(w, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -106,7 +105,7 @@ fun CalendarScreen(vm: AppViewModel) {
         cells.chunked(7).forEach { week ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 week.forEach { day ->
-                    Box(modifier = Modifier.weight(1f).padding(2.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth(1f).padding(2.dp), contentAlignment = Alignment.Center) {
                         if (day != null) DayCell(
                             day = day,
                             episodes = episodes,
