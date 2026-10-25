@@ -59,6 +59,7 @@ import com.example.menstrual.ui.theme.Teal100
 import com.example.menstrual.ui.theme.Teal300
 import com.example.menstrual.ui.theme.Teal400
 import com.example.menstrual.ui.theme.Teal600
+import com.example.menstrual.ui.theme.Teal800
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
