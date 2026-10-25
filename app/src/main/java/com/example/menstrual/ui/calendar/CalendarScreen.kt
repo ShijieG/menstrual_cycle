@@ -102,33 +102,35 @@ fun CalendarScreen(vm: AppViewModel) {
             IconButton(onClick = { monthOffset++ }) { Icon(Icons.Filled.ChevronRight, "下月") }
         }
 
-        // ---- 月历（确定性布局）：用 BoxWithConstraints 算出 屏宽/7，每个格子显式等宽正方形 ----
+        // ---- 月历（确定性布局）：BoxWithConstraints 只负责算格子宽度，内部用 Column 纵向排布各行 ----
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val cell = maxWidth / 7
-            // 星期表头
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                listOf("一", "二", "三", "四", "五", "六", "日").forEach { w ->
-                    Box(modifier = Modifier.width(cell), contentAlignment = Alignment.Center) {
-                        Text(w, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // 星期表头
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    listOf("一", "二", "三", "四", "五", "六", "日").forEach { w ->
+                        Box(modifier = Modifier.width(cell), contentAlignment = Alignment.Center) {
+                            Text(w, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
-            }
-            // 日期网格
-            cells.chunked(7).forEach { week ->
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    week.forEach { day ->
-                        Box(
-                            modifier = Modifier.width(cell).height(cell).padding(2.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (day != null) DayCell(
-                                day = day,
-                                episodes = episodes,
-                                predictions = predictions,
-                                today = today,
-                                selected = day == selectedDate,
-                                onSelect = { selectedDate = day }
-                            )
+                // 日期网格：每行一个 Row，纵向依次排列
+                cells.chunked(7).forEach { week ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        week.forEach { day ->
+                            Box(
+                                modifier = Modifier.width(cell).height(cell).padding(2.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (day != null) DayCell(
+                                    day = day,
+                                    episodes = episodes,
+                                    predictions = predictions,
+                                    today = today,
+                                    selected = day == selectedDate,
+                                    onSelect = { selectedDate = day }
+                                )
+                            }
                         }
                     }
                 }
