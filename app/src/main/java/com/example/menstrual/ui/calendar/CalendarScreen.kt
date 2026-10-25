@@ -104,7 +104,7 @@ fun CalendarScreen(vm: AppViewModel) {
         // ---- 星期表头 ----
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             listOf("一", "二", "三", "四", "五", "六", "日").forEach { w ->
-                Box(modifier = Modifier.fillMaxWidth(1f / 7f), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text(w, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -115,7 +115,7 @@ fun CalendarScreen(vm: AppViewModel) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 week.forEach { day ->
                     Box(
-                        modifier = Modifier.fillMaxWidth(1f / 7f).aspectRatio(1f).padding(2.dp),
+                        modifier = Modifier.weight(1f).aspectRatio(1f).padding(2.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (day != null) DayCell(
