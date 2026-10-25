@@ -53,8 +53,26 @@ class AppViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // ---- 经期记录（按具体日期标记，供日历点击使用） ----
-    fun startPeriodOn(date: LocalDate) = viewModelScope.launch { repository.startPeriod(startDate = date) }
-    fun endPeriodOn(date: LocalDate) = viewModelScope.launch { repository.endPeriod(date = date) }
+    /**
+     * 标记某天为经期开始：按过去已完成经期的平均时长自动推算结束日并落库，
+     * 无历史时使用设置里的默认经期长度；日历只对该区间着色。
+     */
+    fun startPeriodOn(date: LocalDate) = viewModelScope.launch {
+        val finished = repository.getAllEpisodes().filter { it.endDate != null }
+        val len = if (finished.isEmpty()) {
+            defaultPeriodLength.value
+        } else {
+            finished.map { (it.endDate!!.toEpochDay() - it.startDate.toEpochDay() + 1).toInt() }
+                .average().toInt().coerceIn(1, 15)
+        }
+        repository.startPeriod(startDate = date, lengthDays = len)
+    }
+
+    /** 把某条经期的结束日设为指定日期（不早于开始日），可缩短或延长自动推算的区间。 */
+    fun setEpisodeEnd(episode: PeriodEpisodeEntity, date: LocalDate) = viewModelScope.launch {
+        val end = if (date.isBefore(episode.startDate)) episode.startDate else date
+        repository.updateEpisode(episode.copy(endDate = end))
+    }
     fun deleteEpisode(episode: PeriodEpisodeEntity) = viewModelScope.launch { repository.deleteEpisode(episode) }
 
     // ---- 性生活记录（type = SEX_TYPE，按天 toggle） ----

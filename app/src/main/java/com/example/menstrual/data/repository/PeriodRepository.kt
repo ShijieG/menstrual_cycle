@@ -26,14 +26,19 @@ class PeriodRepository(private val db: AppDatabase) {
 
     suspend fun getOngoing(): PeriodEpisodeEntity? = periodDao.getOngoing()
 
-    /** 记录「今天来了」：若存在进行中的经期，先按开始前一天结束它，再新建。 */
-    suspend fun startPeriod(startDate: LocalDate = LocalDate.now(), flowLevel: Int = 2): Long {
+    /**
+     * 记录一次经期开始。
+     * @param lengthDays 经期时长（天）；提供时自动写 endDate = startDate + lengthDays - 1，
+     *                   仅该区间着色，而不是一直"进行中"染到今天。
+     */
+    suspend fun startPeriod(startDate: LocalDate = LocalDate.now(), flowLevel: Int = 2, lengthDays: Int? = null): Long {
         periodDao.getOngoing()?.let { ongoing ->
             val close = if (startDate.isBefore(ongoing.startDate)) ongoing.startDate else startDate.minusDays(1)
             periodDao.update(ongoing.copy(endDate = close))
         }
+        val autoEnd = lengthDays?.let { startDate.plusDays((it - 1).coerceAtLeast(0).toLong()) }
         return periodDao.insert(
-            PeriodEpisodeEntity(startDate = startDate, endDate = null, flowLevel = flowLevel)
+            PeriodEpisodeEntity(startDate = startDate, endDate = autoEnd, flowLevel = flowLevel)
         )
     }
 

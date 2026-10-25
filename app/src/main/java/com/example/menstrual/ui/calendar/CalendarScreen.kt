@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +43,6 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.collectAsState
 import com.example.menstrual.data.local.entity.PeriodEpisodeEntity
 import com.example.menstrual.data.local.entity.SymptomEntryEntity
 import com.example.menstrual.domain.model.PredictionResult
@@ -64,12 +65,17 @@ private val DATE_FMT = DateTimeFormatter.ofPattern("yyyy年M月d日")
 private val WEEK_FMT = DateTimeFormatter.ofPattern("E")
 private val SYMPTOMS = listOf("腹痛", "腰酸", "头痛", "乳房胀痛", "疲劳", "情绪波动")
 
+/**
+ * 日历页（参考系统日历交互）：
+ * 默认整屏只展示月历（格子随屏幕宽度自适应为正方形），
+ * 点击任意日期后，才在下方展开当天的记录面板（经期起止、症状、性生活、预测信息）。
+ */
 @Composable
 fun CalendarScreen(vm: AppViewModel) {
     val episodes by vm.episodes.collectAsState()
     val predictions by vm.predictionsFlow.collectAsState()
     var monthOffset by remember { mutableStateOf(0) }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
 
     val today = LocalDate.now()
     val base = today.withDayOfMonth(1).plusMonths(monthOffset.toLong())
@@ -84,6 +90,7 @@ fun CalendarScreen(vm: AppViewModel) {
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)
     ) {
+        // ---- 月份切换 ----
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -94,6 +101,7 @@ fun CalendarScreen(vm: AppViewModel) {
             IconButton(onClick = { monthOffset++ }) { Icon(Icons.Filled.ChevronRight, "下月") }
         }
 
+        // ---- 星期表头 ----
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             listOf("一", "二", "三", "四", "五", "六", "日").forEach { w ->
                 Box(modifier = Modifier.fillMaxWidth(1f / 7f), contentAlignment = Alignment.Center) {
@@ -102,10 +110,14 @@ fun CalendarScreen(vm: AppViewModel) {
             }
         }
 
+        // ---- 月历网格：格子 = 屏宽/7 的正方形，随屏幕自适应 ----
         cells.chunked(7).forEach { week ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 week.forEach { day ->
-                    Box(modifier = Modifier.fillMaxWidth(1f / 7f).padding(2.dp), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(1f / 7f).aspectRatio(1f).padding(2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         if (day != null) DayCell(
                             day = day,
                             episodes = episodes,
@@ -119,17 +131,29 @@ fun CalendarScreen(vm: AppViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.size(10.dp))
-        Legend()
-        Spacer(modifier = Modifier.size(6.dp))
-        Text(
-            "点击任意日期可查看/编辑当天记录（经期开始结束、症状、性生活）。颜色越深表示来潮概率越高；青色圆点为排卵日，青色小点为易孕日。",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.size(14.dp))
-        DayDetail(vm = vm, date = selectedDate, episodes = episodes, predictions = predictions)
+        // ---- 点击后才展开：图例 + 说明 + 当天记录面板 ----
+        val sel = selectedDate
+        if (sel == null) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                "点击任意日期\n查看 / 记录当天的经期、症状与预测",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            Spacer(modifier = Modifier.height(14.dp))
+            Legend()
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                "颜色越深表示来潮概率越高；青色圆点为排卵日，青色小点为易孕日。",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            DayDetail(vm = vm, date = sel, episodes = episodes, predictions = predictions)
+        }
     }
 }
 
@@ -157,14 +181,14 @@ fun DayCell(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(bg)
             .then(
-                if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))
+                if (selected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
                 else Modifier
             )
             .then(
-                if (day == today && !selected) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                if (day == today && !selected) Modifier.border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
                 else Modifier
             )
             .clickable { onSelect() },
@@ -174,7 +198,7 @@ fun DayCell(
             Text(
                 day.dayOfMonth.toString(),
                 color = textColor,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = if (recorded || selected) FontWeight.Bold else FontWeight.Normal
             )
             if (!recorded && prob >= 0.05) {
@@ -190,7 +214,7 @@ fun DayCell(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 3.dp)
+                    .padding(bottom = 4.dp)
                     .size(8.dp)
                     .clip(CircleShape)
                     .background(Teal600)
@@ -199,7 +223,7 @@ fun DayCell(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp)
+                    .padding(bottom = 5.dp)
                     .size(5.dp)
                     .clip(CircleShape)
                     .background(Teal400)
@@ -228,7 +252,6 @@ fun DayDetail(vm: AppViewModel, date: LocalDate, episodes: List<PeriodEpisodeEnt
                     Text(date.format(DATE_FMT), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(date.format(WEEK_FMT), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                // 状态摘要
                 val status = when {
                     recorded -> "经期"
                     sex -> "有性生活"
@@ -247,23 +270,25 @@ fun DayDetail(vm: AppViewModel, date: LocalDate, episodes: List<PeriodEpisodeEnt
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("经期记录", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                     if (recorded) {
-                        val dayNum = (date.toEpochDay() - episode!!.startDate.toEpochDay() + 1).toInt().coerceAtLeast(1)
-                        val ongoing = episode!!.endDate == null
+                        val ep = episode!!
+                        val dayNum = (date.toEpochDay() - ep.startDate.toEpochDay() + 1).toInt().coerceAtLeast(1)
                         Text(
-                            if (ongoing) "经期进行中（开始于 ${episode!!.startDate.format(DATE_FMT)}）· 第 ${dayNum} 天"
-                            else "已记录经期 · 第 ${dayNum} 天",
+                            if (ep.endDate == null)
+                                "经期进行中（开始于 ${ep.startDate.format(DATE_FMT)}）· 第 ${dayNum} 天"
+                            else
+                                "已记录经期 ${ep.startDate.format(DATE_FMT)} ~ ${ep.endDate!!.format(DATE_FMT)} · 第 ${dayNum} 天",
                             color = Rose400
                         )
-                        Button(onClick = { vm.endPeriodOn(date) }, modifier = Modifier.fillMaxWidth()) {
+                        Button(onClick = { vm.setEpisodeEnd(ep, date) }, modifier = Modifier.fillMaxWidth()) {
                             Text("设为经期于此日结束")
                         }
-                        OutlinedButton(onClick = { vm.deleteEpisode(episode!!) }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(onClick = { vm.deleteEpisode(ep) }, modifier = Modifier.fillMaxWidth()) {
                             Text("删除这条经期")
                         }
                     } else {
                         val isFuture = date.isAfter(today)
                         Text(
-                            if (isFuture) "未来的日期：可回溯标记为经期开始" else "这一天未记录为经期",
+                            if (isFuture) "未来的日期：可预标记为经期开始" else "这一天未记录为经期",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Button(onClick = { vm.startPeriodOn(date) }, modifier = Modifier.fillMaxWidth()) {
@@ -281,8 +306,8 @@ fun DayDetail(vm: AppViewModel, date: LocalDate, episodes: List<PeriodEpisodeEnt
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SYMPTOMS.forEach { opt ->
-                        val sel = selectedSymptoms.any { it.value == opt }
-                        SymptomChip(selected = sel, label = opt) { vm.toggleSymptom(date, SYMPTOM_TYPE, opt, 1) }
+                        val selSym = selectedSymptoms.any { it.value == opt }
+                        SymptomChip(selected = selSym, label = opt) { vm.toggleSymptom(date, SYMPTOM_TYPE, opt, 1) }
                     }
                 }
             }
