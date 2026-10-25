@@ -153,7 +153,7 @@ fun CalendarScreen(vm: AppViewModel) {
             Legend()
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                "颜色越深表示来潮概率越高；青色圆点为排卵日，青色小点为易孕日。",
+                "红色=已记录经期/预测经期（>90%）；青色块=易孕日，深青色块=排卵日。",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -174,15 +174,24 @@ fun DayCell(
 ) {
     val recorded = isRecordedDay(day, episodes)
     val prob = if (recorded) 1.0 else predictor.dayProbability(day, predictions)
-    val fertile = predictions.predictions.any { !day.isBefore(it.fertileStart) && !day.isAfter(it.fertileEnd) }
     val ovulation = predictions.predictions.any { it.ovulationDate == day }
+    // 易孕日 = 落入易孕窗且非排卵日
+    val fertile = !ovulation && predictions.predictions.any { !day.isBefore(it.fertileStart) && !day.isAfter(it.fertileEnd) }
+    // 预测经期：仅在来潮概率高于 90% 时显示与染色
+    val showProb = !recorded && prob >= 0.9
 
     val bg = when {
-        recorded -> Rose400
-        prob >= 0.05 -> lerp(Rose100, Rose600, prob.toFloat().coerceIn(0f, 1f))
+        recorded -> Rose400                      // 已记录经期：红色块
+        ovulation -> Teal600                     // 排卵日：深青色块
+        fertile -> Teal400                       // 易孕日：浅青色块
+        showProb -> lerp(Rose100, Rose600, prob.toFloat().coerceIn(0f, 1f))  // 预测经期（>90%）：红色深浅
         else -> MaterialTheme.colorScheme.surface
     }
-    val textColor = if (recorded) Color.White else Rose800
+    val textColor = when {
+        recorded || ovulation || fertile -> Color.White
+        showProb -> Rose800
+        else -> MaterialTheme.colorScheme.onSurface
+    }
 
     Box(
         modifier = Modifier
@@ -205,35 +214,17 @@ fun DayCell(
                 day.dayOfMonth.toString(),
                 color = textColor,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (recorded || selected) FontWeight.Bold else FontWeight.Normal
+                fontWeight = if (recorded || ovulation || fertile || selected) FontWeight.Bold else FontWeight.Normal
             )
-            if (!recorded && prob >= 0.05) {
+            // 预测经期（>90%）显示百分比；排卵/易孕/已记录不显示百分比
+            if (showProb) {
                 Text(
                     "%.0f%%".format(prob * 100),
-                    color = textColor.copy(alpha = 0.85f),
+                    color = textColor.copy(alpha = 0.9f),
                     style = MaterialTheme.typography.labelSmall,
                     textAlign = TextAlign.Center
                 )
             }
-        }
-        if (ovulation) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 4.dp)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(Teal600)
-            )
-        } else if (fertile) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 5.dp)
-                    .size(5.dp)
-                    .clip(CircleShape)
-                    .background(Teal400)
-            )
         }
     }
 }
@@ -391,8 +382,9 @@ fun SymptomChip(selected: Boolean, label: String, onClick: () -> Unit) {
 fun Legend() {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         LegendItem(Rose400, "已记录经期")
-        LegendItem(Rose100, "预测（浅→深=概率低→高）")
-        LegendItem(Teal400, "易孕/排卵")
+        LegendItem(Rose100, "预测经期（>90%）")
+        LegendItem(Teal600, "排卵日")
+        LegendItem(Teal400, "易孕日")
     }
 }
 

@@ -39,12 +39,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.collectAsState
 import com.example.menstrual.MenstrualApplication
 import com.example.menstrual.reminder.ReminderScheduler
 import com.example.menstrual.ui.AppViewModel
 import com.example.menstrual.ui.theme.Rose100
 import kotlinx.coroutines.launch
+import java.io.InputStream
 
 @Composable
 fun SettingsScreen(vm: AppViewModel) {
@@ -92,6 +94,28 @@ fun SettingsScreen(vm: AppViewModel) {
         }
     }
 
+    // 导入数据：用系统文件选择器读取 JSON 备份（换机迁移）
+    var importMsg by remember { mutableStateOf<String?>(null) }
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            try {
+                val stream: InputStream? = context.contentResolver.openInputStream(uri)
+                if (stream != null) {
+                    val (eps, syms) = vm.importData(stream)
+                    stream.close()
+                    importMsg = "导入成功：经期 ${eps} 条、症状 ${syms} 条"
+                } else {
+                    importMsg = "无法读取该文件"
+                }
+            } catch (e: Exception) {
+                importMsg = "导入失败：${e.message ?: e.javaClass.simpleName}"
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -129,10 +153,17 @@ fun SettingsScreen(vm: AppViewModel) {
 
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Rose100)) {
             Column(modifier = Modifier.padding(14.dp)) {
-                Text("数据导出 / 备份", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("将所有经期与症状记录导出为 JSON 文件并分享保存。", style = MaterialTheme.typography.labelMedium)
+                Text("数据导出 / 导入（换机迁移）", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("导出：将所有经期与症状记录保存为 JSON 文件并分享备份。", style = MaterialTheme.typography.labelMedium)
                 Button(onClick = { shareExport() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     Text("导出数据")
+                }
+                Text("导入：从本机选择此前导出的 JSON 文件，将数据写入当前设备（不会删除已有记录）。", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(top = 8.dp))
+                Button(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text("导入数据")
+                }
+                importMsg?.let {
+                    Text(it, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                 }
             }
         }

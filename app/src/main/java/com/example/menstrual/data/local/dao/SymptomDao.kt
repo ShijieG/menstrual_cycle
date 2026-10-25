@@ -19,6 +19,9 @@ interface SymptomDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: SymptomEntryEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entries: List<SymptomEntryEntity>)
+
     @Delete
     suspend fun delete(entry: SymptomEntryEntity)
 

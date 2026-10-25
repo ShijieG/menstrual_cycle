@@ -99,6 +99,9 @@ class AppViewModel(
 
     suspend fun export(): File = exportManager.export(repository.getAllEpisodes(), repository.getAllSymptoms())
 
+    /** 从 JSON 输入流导入数据（换机迁移），返回 (经期条数, 症状条数)。 */
+    suspend fun importData(input: java.io.InputStream): Pair<Int, Int> = repository.importData(input)
+
     companion object {
         /** 症状类型（保留）；性生活使用 SEX_TYPE，心情/分泌物已移除。 */
         const val SYMPTOM_TYPE = 0

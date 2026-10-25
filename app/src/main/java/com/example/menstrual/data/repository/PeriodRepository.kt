@@ -6,6 +6,9 @@ import com.example.menstrual.data.local.dao.SymptomDao
 import com.example.menstrual.data.local.entity.PeriodEpisodeEntity
 import com.example.menstrual.data.local.entity.SymptomEntryEntity
 import kotlinx.coroutines.flow.Flow
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.InputStream
 import java.time.LocalDate
 
 /**
@@ -57,4 +60,47 @@ class PeriodRepository(private val db: AppDatabase) {
 
     suspend fun deleteEpisode(episode: PeriodEpisodeEntity) = periodDao.delete(episode)
     suspend fun updateEpisode(episode: PeriodEpisodeEntity) = periodDao.update(episode)
+
+    /**
+     * 从导出的 JSON 流导入数据（换机迁移用）。
+     * 解析 episodes / symptoms 两个数组，批量 REPLACE 写入，不覆盖设备上既有但文件里没有的记录。
+     * @return 导入的经期条数与症状条数
+     */
+    suspend fun importData(input: InputStream): Pair<Int, Int> {
+        val text = input.bufferedReader().use { it.readText() }
+        val root = JSONObject(text)
+        val episodes = mutableListOf<PeriodEpisodeEntity>()
+        val symptoms = mutableListOf<SymptomEntryEntity>()
+        root.optJSONArray("episodes")?.let { arr: JSONArray ->
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                episodes.add(
+                    PeriodEpisodeEntity(
+                        id = o.optLong("id", 0L),
+                        startDate = LocalDate.parse(o.getString("startDate")),
+                        endDate = if (o.isNull("endDate")) null else LocalDate.parse(o.getString("endDate")),
+                        flowLevel = o.optInt("flowLevel", 2),
+                        note = o.optString("note", "")
+                    )
+                )
+            }
+        }
+        root.optJSONArray("symptoms")?.let { arr: JSONArray ->
+            for (i in 0 until arr.length()) {
+                val o = arr.getJSONObject(i)
+                symptoms.add(
+                    SymptomEntryEntity(
+                        id = o.optLong("id", 0L),
+                        date = LocalDate.parse(o.getString("date")),
+                        type = o.optInt("type"),
+                        value = o.optString("value"),
+                        intensity = o.optInt("intensity")
+                    )
+                )
+            }
+        }
+        if (episodes.isNotEmpty()) periodDao.insertAll(episodes)
+        if (symptoms.isNotEmpty()) symptomDao.insertAll(symptoms)
+        return episodes.size to symptoms.size
+    }
 }

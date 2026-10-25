@@ -22,6 +22,9 @@ interface PeriodDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(episode: PeriodEpisodeEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(episodes: List<PeriodEpisodeEntity>)
+
     @Update
     suspend fun update(episode: PeriodEpisodeEntity)
 
