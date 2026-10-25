@@ -12,5 +12,7 @@ val Rose800 = Color(0xFF72243E)
 
 val Teal400 = Color(0xFF1D9E75)
 val Teal600 = Color(0xFF0F6E56)
+val Teal100 = Color(0xFFD6F0E7)  // 极浅青：易孕日色块
+val Teal300 = Color(0xFF8FD3BC)  // 浅青：排卵日色块（比易孕日深一点）
 
 val WarnAmber = Color(0xFFEF9F27)

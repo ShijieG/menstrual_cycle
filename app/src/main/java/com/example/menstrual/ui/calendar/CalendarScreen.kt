@@ -40,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,6 +55,8 @@ import com.example.menstrual.ui.theme.Rose100
 import com.example.menstrual.ui.theme.Rose400
 import com.example.menstrual.ui.theme.Rose600
 import com.example.menstrual.ui.theme.Rose800
+import com.example.menstrual.ui.theme.Teal100
+import com.example.menstrual.ui.theme.Teal300
 import com.example.menstrual.ui.theme.Teal400
 import com.example.menstrual.ui.theme.Teal600
 import java.time.LocalDate
@@ -153,7 +154,7 @@ fun CalendarScreen(vm: AppViewModel) {
             Legend()
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                "红色=已记录经期/预测经期（>90%）；青色块=易孕日，深青色块=排卵日。",
+                "红色=已记录经期/预测经期（90%~99% 浅红，100% 深红）；浅青色块=易孕日，青色块=排卵日。",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -177,18 +178,23 @@ fun DayCell(
     val ovulation = predictions.predictions.any { it.ovulationDate == day }
     // 易孕日 = 落入易孕窗且非排卵日
     val fertile = !ovulation && predictions.predictions.any { !day.isBefore(it.fertileStart) && !day.isAfter(it.fertileEnd) }
-    // 预测经期：仅在来潮概率高于 90% 时显示与染色
+    // 预测经期：仅在来潮概率 ≥ 90% 时显示与染色；90%~99% 浅色块，100% 深色块
     val showProb = !recorded && prob >= 0.9
+    val probDark = prob >= 0.999
 
     val bg = when {
-        recorded -> Rose400                      // 已记录经期：红色块
-        ovulation -> Teal600                     // 排卵日：深青色块
-        fertile -> Teal400                       // 易孕日：浅青色块
-        showProb -> lerp(Rose100, Rose600, prob.toFloat().coerceIn(0f, 1f))  // 预测经期（>90%）：红色深浅
+        recorded -> Rose400                                                  // 已记录经期：红色块
+        ovulation -> Teal300                                                 // 排卵日：浅青色块（比易孕日深一点）
+        fertile -> Teal100                                                   // 易孕日：极浅青色块
+        showProb && probDark -> Rose600                                      // 预测经期 =100%：深红块
+        showProb -> Rose100                                                  // 预测经期 90%~99%：浅红块
         else -> MaterialTheme.colorScheme.surface
     }
     val textColor = when {
-        recorded || ovulation || fertile -> Color.White
+        recorded -> Color.White
+        showProb && probDark -> Color.White
+        ovulation -> Teal800
+        fertile -> Teal800
         showProb -> Rose800
         else -> MaterialTheme.colorScheme.onSurface
     }
@@ -382,9 +388,10 @@ fun SymptomChip(selected: Boolean, label: String, onClick: () -> Unit) {
 fun Legend() {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         LegendItem(Rose400, "已记录经期")
-        LegendItem(Rose100, "预测经期（>90%）")
-        LegendItem(Teal600, "排卵日")
-        LegendItem(Teal400, "易孕日")
+        LegendItem(Rose100, "预测经期 90%~99%")
+        LegendItem(Rose600, "预测经期 100%")
+        LegendItem(Teal300, "排卵日")
+        LegendItem(Teal100, "易孕日")
     }
 }
 

@@ -73,8 +73,9 @@ class PredictCyclesUseCase {
             val windowStart = start.plusDays(floor(-half).toLong())
             val windowEnd = start.plusDays(ceil(half).toLong())
             val ovulation = start.minusDays(14)
-            val fertileStart = ovulation.minusDays(5)
-            val fertileEnd = ovulation.plusDays(1)
+            // 易孕窗：偏保守地放宽——排卵前 6 天到排卵后 2 天（含精子存活与卵子存活的缓冲）
+            val fertileStart = ovulation.minusDays(6)
+            val fertileEnd = ovulation.plusDays(2)
 
             val confidence = when {
                 !isDefault && intervals.size >= 6 && sigC <= 3.0 -> Confidence.HIGH
