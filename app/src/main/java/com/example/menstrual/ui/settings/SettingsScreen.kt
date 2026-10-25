@@ -160,7 +160,7 @@ fun NumberRow(label: String, value: Int, min: Int, max: Int, unit: String, onSet
     }
 
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.fillMaxWidth(1f))
+        Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
         OutlinedTextField(
             value = text,
             onValueChange = { s ->
